@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heart Sync</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; text-align: center; }
+    button { font-size: 1.2em; padding: 12px 24px; margin: 10px; }
+    #comment { width: 80%; padding: 10px; margin: 20px auto; display: block; }
+    .selected { background: #d0e8ff; font-weight: bold; } /* light blue highlight */
+  </style>
+</head>
+<body>
+  <h1 onclick="resetApp()" style="cursor: pointer; user-select: none;">Heart Sync</h1>
+  <div id="content"></div>
+
+  <script>
+    const questions = [
+      { text: "Did you do sports in your childhood?", good: "yes" },
+      { text: "Did you regularly attend physical education class at school?", good: "yes" },
+      { text: "Do you enjoy active hobbies?", good: "yes" },
+      { text: "Do you eat only homemade food?", good: "yes" },
+      { text: "Do you like cooking delicious meals at home yourself?", good: "yes" },
+      { text: "Are you satisfied with your living conditions?", good: "yes" },
+      { text: "Does interacting with people often annoy you?", good: "no" },
+      { text: "Do you like spending your free time outdoors?", good: "yes" },
+      { text: "Do you have cats or dogs at home?", good: "yes" },
+      { text: "Is your work connected with creativity?", good: "yes" }
+    ];
+
+    let current = -1;
+    let score = 0;
+    let comments = [];
+    let mode = 'voice';
+    let inputType = 'voice';
+    let answers = [];
+    let spokenQuestions = new Set(); // prevent repeat speech
+
+    const synth = window.speechSynthesis;
+    let recognition = null;
+    let listening = false;
+
+    function speak(text) {
+      if (mode === 'text') return;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'en-US';
+      utter.rate = 0.9;
+      synth.speak(utter);
+    }
+
+    function startListening() {
+      if (mode === 'text' || listening) return;
+      if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+        content.innerHTML += '<p><small>Voice not supported in this browser.</small></p>';
+        return;
+      }
+      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.trim().toLowerCase();
+        if (transcript.includes('yes') || transcript === 'ya' || transcript === 'yep') answer('yes');
+        else if (transcript.includes('no') || transcript === 'nope') answer('no');
+        else {
+          document.getElementById('comment').value = transcript;
+        }
+      };
+      recognition.onerror = () => listening = false;
+      recognition.onend = () => listening = false;
+      recognition.start();
+      listening = true;
+    }
+
+    const content = document.getElementById('content');
+
+    function setMode(m) {
+      mode = m;
+      inputType = 'voice';
+      current = 0;
+      spokenQuestions.clear();
+      render();
+    }
+
+    function toggleInput() {
+      inputType = inputType === 'voice' ? 'text' : 'voice';
+      render();
+    }
+
+    function resetApp() {
+      current = -1;
+      score = 0;
+      answers = [];
+      comments = [];
+      inputType = 'voice';
+      spokenQuestions.clear();
+      render();
+    }
+
+    function startAgain() {
+      current = 0;
+      score = 0;
+      answers = [];
+      comments = [];
+      inputType = 'voice';
+      spokenQuestions.clear();
+      render();
+      if (!spokenQuestions.has(0)) {
+        speak(questions[0].text);
+        spokenQuestions.add(0);
+      }
+    }
+
+    function render() {
+      if (current === -1) {
+        content.innerHTML = `
+          <p>Heart Sync: 10 questions on everyday habits to spot patterns linked to heart risk.</p>
+          <p>Based on observations from over 45 years of real-life cardiology experience.</p>
+          <p>No diagnosis — just a quiet heads-up if something needs attention.</p>
+          <p>Choose how you'd like to answer:</p>
+          <button onclick="setMode('voice')">Voice (talk & listen)</button><br><br>
+          <button onclick="setMode('hybrid')">Hybrid (talk or type)</button><br><br>
+          <button onclick="setMode('text')">Text only</button>
+          <p><small>No data leaves your device.</small></p>
+        `;
+        return;
+      }
+
+      if (current >= questions.length) {
+        let result = score >= 7 
+          ? "Your habits line up with patterns that support heart health over time. From early years, mindful motion has built lasting reserve and ease. Self-prepared choices bring healthy nutrition that keeps flow smooth and steady. With comfortable surroundings and a positive social environment, hidden strain stays low. Regular fresh air, part of an active lifestyle, brings renewal and balance. Strong stress relief outlets allow tension to release quietly, offering long-term protection."
+          : "Some everyday habits could shift to better support heart health. With mindful motion added — like a daily walk in nature or morning stretching — reserve and ease would build over time. Healthy nutrition comes easier through more home-cooked meals with fresh ingredients, smoothing flow. A more positive social environment, perhaps by limiting draining interactions or finding calmer spaces, lowers strain. Embracing an active lifestyle with regular time outdoors or forest walks brings renewal. Stronger stress relief — through playing with a cat or dog, or a creative hobby like drawing or writing — helps tension release before it builds.";
+        content.innerHTML = `<p>${result}</p><button onclick="location.reload()">Try again</button>`;
+        return;
+      }
+
+      let q = questions[current];
+      content.innerHTML = `
+        <p><strong>Question ${current + 1} of ${questions.length}</strong></p>
+        <p>${q.text}</p>
+        <button onclick="answer('yes')" class="${answers[current] === 'yes' ? 'selected' : ''}">Yes</button>
+        <button onclick="answer('no')" class="${answers[current] === 'no' ? 'selected' : ''}">No</button>
+        ${mode !== 'text' && inputType === 'voice' ? '<button onclick="startListening()">🎤 Speak answer</button>' : ''}
+        ${mode === 'hybrid' ? `<br><button onclick="toggleInput()">Switch to ${inputType === 'voice' ? 'text' : 'voice'}</button>` : ''}
+        <p>Anything to add?</p>
+        <textarea id="comment" placeholder="Optional comment...">${comments[current] || ''}</textarea>
+        <br>
+        <button onclick="goBack()" ${current === 0 ? 'disabled' : ''}>Back</button>
+        <button onclick="startAgain()">Start again</button>
+        <button id="nextBtn" onclick="nextQuestion()" ${answers[current] ? '' : 'disabled'}>Next</button>
+      `;
+      if (!spokenQuestions.has(current)) {
+        speak(q.text);
+        spokenQuestions.add(current);
+      }
+    }
+
+    function answer(choice) {
+      let q = questions[current];
+      if (choice.toLowerCase() === q.good) score++;
+      answers[current] = choice;
+      let txt = document.getElementById('comment').value.trim();
+      if (txt) comments[current] = txt;
+      document.getElementById('nextBtn').disabled = false;
+      render();
+    }
+
+    function goBack() {
+      if (current > 0) {
+        current--;
+        render();
+        if (!spokenQuestions.has(current)) {
+          speak(questions[current].text);
+          spokenQuestions.add(current);
+        }
+      }
+    }
+
+    function startAgain() {
+      current = 0;
+      score = 0;
+      answers = [];
+      comments = [];
+      inputType = 'voice';
+      spokenQuestions.clear();
+      render();
+      if (!spokenQuestions.has(0)) {
+        speak(questions[0].text);
+        spokenQuestions.add(0);
+      }
+    }
+
+    function nextQuestion() {
+      if (listening && recognition) recognition.stop();
+      let txt = document.getElementById('comment').value.trim();
+      if (txt) comments[current] = txt;
+      current++;
+      document.getElementById('comment').value = '';
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
