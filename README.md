@@ -2,17 +2,21 @@
 
 10 simple questions about everyday habits to spot patterns linked to heart risk.
 
-**Features**:
-- Voice, hybrid, text modes
-- No data collection (everything local)
-- Back/Start again options
+**How to use**  
+Just open the file in your browser (Chrome or Edge recommended for voice mode):  
+[Open heart-sync.html](01-heart-sync.html)  
 
-**How to use**:
-1. Download `heart-sync.html`
-2. Open in browser (Chrome/Edge recommended for voice)
-3. Answer questions
+Everything stays on your device — no data is collected or sent anywhere.
 
-Based on observations from 45+ years of real-life cardiology experience.  
-No diagnosis — just a quiet heads-up.
+**Features**  
+- Voice, hybrid, and text input modes  
+- Back and restart options  
+- No data collection (fully local)  
+
+**Based on**  
+Observations from over 45 years of real-life cardiology experience.  
+
+**Disclaimer**  
+No diagnosis — just a quiet heads-up if something needs attention.  
 
 Feedback welcome!
