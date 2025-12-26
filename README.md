@@ -4,7 +4,7 @@
 
 **How to use**  
 Just open the file in your browser (Chrome or Edge recommended for voice mode):  
-[Open heart-sync.html](01-heart-sync.html)  
+[Open heart-sync.html](index.html)  
 
 Everything stays on your device — no data is collected or sent anywhere.
 
@@ -20,3 +20,4 @@ Observations from over 45 years of real-life cardiology experience.
 No diagnosis — just a quiet heads-up if something needs attention.  
 
 Feedback welcome!
+
